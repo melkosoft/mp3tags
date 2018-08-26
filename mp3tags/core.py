@@ -12,6 +12,7 @@ def getTagValue(value, file, tags, newtags, cnt):
     value = value.replace("{album}", newtags['album'] if 'album' in newtags.keys() else str(max(tags.tag.album,"")))
     value = value.replace("{year}", newtags['recording_date'] if 'recording_date' in newtags.keys() else str(max(tags.tag.recording_date,"")))
     value = value.replace("{track}", newtags['track_num'] if 'track_num'in newtags.keys() else str(max(tags.tag.track_num, "")))
+    value = value.replace("{name}", newtags['name'] if 'name'in newtags.keys() else str(max(file, "")))
     value = value.replace("{cnt}", str(cnt))
     return value
 
@@ -19,21 +20,22 @@ def id3update(tags, files):
     cnt = 1
     total = len(files)
     for file in files:
-        file_tags = eyed3.load(file, tag_version=ID3_V1_1)
+        file_tags = eyed3.load(file.decode('utf-8'), tag_version=ID3_V1_1)
+        file_name=""
         file_tags.initTag(version = (2,4,0))
-        #try: 
-        #    print file_tags.tag.title, file_tags.tag.artist, file_tags.tag.track_num, file_tags.tag.recording_date
-        #except: 
-        #    file_tags.initTag(version = (2,4,0))
-        #    pass
         for k in tags:
-            v = getTagValue(tags[k], os.path.basename(file), file_tags, tags, cnt)
+            v = getTagValue(tags[k], os.path.basename(file).replace(".mp3",""), file_tags, tags, cnt)
             if k == 'title':  file_tags.tag.title          = unicode(v, "utf-8")
             if k == 'artist': file_tags.tag.artist         = unicode(v, "utf-8") 
             if k == 'album':  file_tags.tag.album          = unicode(v, "utf-8")
             if k == 'year':   file_tags.tag.recording_date = unicode(v, "utf-8")
-            if k == 'track':  file_tags.tag.track_num = ( v, total )
-        file_tags.tag.save()
+            if k == 'track':  file_tags.tag.track_num      = ( v, total )
+            if k == 'name':   file_name = v
+        file_tags.tag.save(encoding='utf-8')
+        if file_name and file_name != os.path.basename(file).replace(".mp3",""): 
+            file_name = os.path.join(os.path.dirname(file), file_name+".mp3")
+            os.rename(file, file_name)
+        print os.path.basename(file_name if file_name else file)
         cnt += 1
 
 def main():
@@ -43,6 +45,7 @@ def main():
     parser.add_argument('--album',  action="store", help="Album")
     parser.add_argument('--year',   action="store", help="Year")
     parser.add_argument('--track',  action='store', help="Track")
+    parser.add_argument('--name',   action='store', help="Filename")
     parser.add_argument('files', nargs='*')
     args = parser.parse_args()
     # Check if files were passed through pipe
