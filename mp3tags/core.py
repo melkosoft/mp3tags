@@ -25,12 +25,13 @@ def id3update(tags, files):
         file_tags.initTag(version = (2,4,0))
         for k in tags:
             v = getTagValue(tags[k], os.path.basename(file).replace(".mp3",""), file_tags, tags, cnt)
-            if k == 'title':  file_tags.tag.title          = unicode(v, "utf-8")
-            if k == 'artist': file_tags.tag.artist         = unicode(v, "utf-8") 
-            if k == 'album':  file_tags.tag.album          = unicode(v, "utf-8")
-            if k == 'year':   file_tags.tag.recording_date = unicode(v, "utf-8")
-            if k == 'track':  file_tags.tag.track_num      = ( v, total )
-            if k == 'name':   file_name = v
+            if k == 'title':   file_tags.tag.title          = unicode(v, "utf-8")
+            if k == 'artist':  file_tags.tag.artist         = unicode(v, "utf-8") 
+            if k == 'album':   file_tags.tag.album          = unicode(v, "utf-8")
+            if k == 'year':    file_tags.tag.recording_date = unicode(v, "utf-8")
+            if k == 'comment': file_tags.tag.comments.set(unicode(v, "utf-8"))
+            if k == 'track':   file_tags.tag.track_num      = ( v, total )
+            if k == 'name':    file_name = v
         file_tags.tag.save(encoding='utf-8')
         if file_name and file_name != os.path.basename(file).replace(".mp3",""): 
             file_name = os.path.join(os.path.dirname(file), file_name+".mp3")
@@ -45,6 +46,7 @@ def main():
     parser.add_argument('--album',  action="store", help="Album")
     parser.add_argument('--year',   action="store", help="Year")
     parser.add_argument('--track',  action='store', help="Track")
+    parser.add_argument('--comment',action='store', help="Comment")
     parser.add_argument('--name',   action='store', help="Filename")
     parser.add_argument('files', nargs='*')
     args = parser.parse_args()
